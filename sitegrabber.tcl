@@ -16,7 +16,7 @@ proc download {url path {encoding "utf-8"}} {
   return $body
 }
 
-proc element_start {name attlist args} {
+proc parser_element_start {name attlist args} {
   # we modify the upper scope's stylesheets list
   global stylesheets
   global javascripts
@@ -30,7 +30,7 @@ proc element_start {name attlist args} {
 
 proc get_asset_sheets {html} {
   # grab all the css file urls from the HTML
-  set parser [::xml::parser -elementstartcommand element_start]
+  set parser [::xml::parser -elementstartcommand parser_element_start]
   return [$parser parse $html]
 }
 
@@ -45,7 +45,6 @@ proc main {argv} {
   }
   set token [http::geturl $url]
   set body [http::data $token]
-  # puts $body
   set page [download $url $destination_path "iso8859-1"]
   catch {get_asset_sheets $page} errmsg
   puts "StyleSheets: $stylesheets"
