@@ -2,6 +2,7 @@ package require http
 package require xml
 
 set stylesheets [list]
+set javascripts [list]
 
 proc download {url path {encoding "utf-8"}} {
   # Download the file:
@@ -18,14 +19,16 @@ proc download {url path {encoding "utf-8"}} {
 proc element_start {name attlist args} {
   # we modify the upper scope's stylesheets list
   global stylesheets
-  if { [dict exists $attlist type] && [dict get $attlist type] == "text/css" } {
-    # puts [dict get $attlist href]
-    # by appending stylesheets to it
+  global javascripts
+  if { $name == "link" && [dict exists $attlist type] && [dict get $attlist type] == "text/css" } {
     lappend stylesheets [dict get $attlist href]
+  }
+  if { $name == "script" && [dict exists $attlist src] } {
+    lappend javascripts [dict get $attlist src]
   }
 }
 
-proc get_style_links {html} {
+proc get_asset_sheets {html} {
   # grab all the css file urls from the HTML
   set parser [::xml::parser -elementstartcommand element_start]
   return [$parser parse $html]
@@ -33,6 +36,7 @@ proc get_style_links {html} {
 
 proc main {argv} {
   global stylesheets
+  global javascripts
   set destination_path [lindex $argv 0]
   set url [lindex $argv 1]
   if { [file exists $destination_path] == 0 } {
@@ -43,8 +47,9 @@ proc main {argv} {
   set body [http::data $token]
   # puts $body
   set page [download $url $destination_path "iso8859-1"]
-  catch {get_style_links $page} errmsg
-  puts $stylesheets
+  catch {get_asset_sheets $page} errmsg
+  puts "StyleSheets: $stylesheets"
+  puts "JavaScripts: $javascripts"
 }
 
 # Let there be light...
